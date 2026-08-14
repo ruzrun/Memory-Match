@@ -1,0 +1,1080 @@
+@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap');
+
+
+/* =========================================================
+   RESET
+========================================================= */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+
+/* =========================================================
+   BODY
+========================================================= */
+
+body {
+    min-height: 100vh;
+
+    display: flex;
+
+    justify-content: center;
+
+    align-items: center;
+
+    padding: 20px;
+
+    background:
+        linear-gradient(
+            -45deg,
+            #ff6b6b,
+            #fddb92,
+            #4facfe,
+            #43e97b
+        );
+
+    background-size: 400% 400%;
+
+    animation:
+        gradientShift 15s ease infinite;
+
+    font-family:
+        Georgia,
+        serif;
+
+    color: white;
+
+    overflow-x: hidden;
+
+    overscroll-behavior: none;
+}
+
+
+@keyframes gradientShift {
+
+    0% {
+        background-position:
+            0% 50%;
+    }
+
+    50% {
+        background-position:
+            100% 50%;
+    }
+
+    100% {
+        background-position:
+            0% 50%;
+    }
+
+}
+
+
+/* =========================================================
+   GAME CONTAINER
+========================================================= */
+
+.game-container {
+    width: 100%;
+
+    max-width: 700px;
+
+    padding: 25px;
+
+    text-align: center;
+
+    background:
+        rgba(0, 0, 0, 0.3);
+
+    border-radius: 20px;
+
+    box-shadow:
+        0 0 20px
+        rgba(255, 255, 255, 0.5);
+
+    backdrop-filter:
+        blur(5px);
+
+    position: relative;
+}
+
+
+/* =========================================================
+   TITLE
+========================================================= */
+
+h1 {
+    font-family:
+        'Dancing Script',
+        cursive;
+
+    font-size:
+        2.8rem;
+
+    color:
+        #fa93c7;
+
+    margin-bottom:
+        5px;
+
+    text-shadow:
+        0 0 10px
+        rgba(250, 147, 199, 0.35);
+}
+
+
+.subtitle {
+    color:
+        #ffd700;
+
+    font-style:
+        italic;
+
+    margin-bottom:
+        20px;
+}
+
+
+/* =========================================================
+   SCORE BOARD
+========================================================= */
+
+.score-board {
+    display:
+        flex;
+
+    justify-content:
+        space-around;
+
+    gap:
+        12px;
+
+    margin-bottom:
+        15px;
+}
+
+
+.score-board div {
+    width:
+        33.333%;
+
+    padding:
+        10px 6px;
+
+    border-radius:
+        10px;
+
+    background:
+        rgba(255, 255, 255, 0.15);
+
+    border:
+        1px solid
+        rgba(255, 255, 255, 0.08);
+
+    font-size:
+        13px;
+}
+
+
+.score-board span {
+    display:
+        block;
+
+    margin-top:
+        3px;
+
+    font-size:
+        24px;
+
+    font-weight:
+        bold;
+
+    color:
+        #ffd700;
+}
+
+
+/* =========================================================
+   MESSAGE
+========================================================= */
+
+#gameMessage {
+    min-height:
+        24px;
+
+    margin:
+        12px 0 18px;
+
+    color:
+        #ffd700;
+
+    font-style:
+        italic;
+}
+
+
+/* =========================================================
+   RANDOM MEMORY BOARD
+========================================================= */
+
+#gameBoard {
+
+    /*
+        The board is intentionally NOT a normal grid.
+
+        JavaScript will position every card itself
+        to create random organic shapes.
+    */
+
+    width:
+        100%;
+
+    min-height:
+        300px;
+
+    margin:
+        0 auto;
+
+    position:
+        relative;
+
+    display:
+        block;
+
+    overflow:
+        hidden;
+
+    touch-action:
+        manipulation;
+
+    user-select:
+        none;
+
+    -webkit-user-select:
+        none;
+
+    border-radius:
+        15px;
+
+    background:
+        rgba(0, 0, 0, 0.18);
+
+    border:
+        1px solid
+        rgba(255, 255, 255, 0.08);
+
+    box-shadow:
+        inset 0 0 20px
+        rgba(0, 0, 0, 0.15);
+}
+
+
+/* =========================================================
+   MEMORY CARD
+========================================================= */
+
+.memory-card {
+
+    position:
+        absolute;
+
+    perspective:
+        900px;
+
+    cursor:
+        pointer;
+
+    transition:
+        transform
+        0.2s ease;
+
+    touch-action:
+        manipulation;
+}
+
+
+/* =========================================================
+   CARD INNER
+========================================================= */
+
+.card-inner {
+
+    width:
+        100%;
+
+    height:
+        100%;
+
+    position:
+        relative;
+
+    transform-style:
+        preserve-3d;
+
+    transition:
+        transform
+        0.45s
+        cubic-bezier(
+            0.4,
+            0.2,
+            0.2,
+            1
+        );
+}
+
+
+/* =========================================================
+   FLIPPED CARD
+========================================================= */
+
+.memory-card.flipped .card-inner,
+.memory-card.matched .card-inner {
+
+    transform:
+        rotateY(180deg);
+
+}
+
+
+/* =========================================================
+   CARD FRONT / BACK
+========================================================= */
+
+.card-front,
+.card-back {
+
+    position:
+        absolute;
+
+    inset:
+        0;
+
+    width:
+        100%;
+
+    height:
+        100%;
+
+    border-radius:
+        10px;
+
+    backface-visibility:
+        hidden;
+
+    -webkit-backface-visibility:
+        hidden;
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        center;
+
+    overflow:
+        hidden;
+}
+
+
+/* =========================================================
+   CARD BACK
+========================================================= */
+
+.card-back {
+
+    background:
+        linear-gradient(
+            135deg,
+            rgba(250, 147, 199, 0.9),
+            rgba(79, 172, 254, 0.8)
+        );
+
+    border:
+        2px solid
+        rgba(255, 255, 255, 0.25);
+
+    box-shadow:
+        0 4px 12px
+        rgba(0, 0, 0, 0.25);
+
+    color:
+        white;
+
+    font-family:
+        'Dancing Script',
+        cursive;
+
+    font-size:
+        clamp(
+            20px,
+            5vw,
+            30px
+        );
+
+    text-shadow:
+        0 2px 5px
+        rgba(0, 0, 0, 0.25);
+}
+
+
+/* =========================================================
+   CARD BACK PATTERN
+========================================================= */
+
+.card-back::before {
+
+    content:
+        "✦";
+
+    position:
+        absolute;
+
+    font-size:
+        1.3em;
+
+    opacity:
+        0.35;
+
+    transform:
+        translate(
+            -18px,
+            -18px
+        );
+
+}
+
+
+.card-back::after {
+
+    content:
+        "✦";
+
+    position:
+        absolute;
+
+    font-size:
+        1.1em;
+
+    opacity:
+        0.3;
+
+    transform:
+        translate(
+            18px,
+            18px
+        );
+
+}
+
+
+/* =========================================================
+   CARD FRONT
+========================================================= */
+
+.card-front {
+
+    background:
+        rgba(255, 255, 255, 0.92);
+
+    transform:
+        rotateY(180deg);
+
+    border:
+        2px solid
+        rgba(255, 255, 255, 0.5);
+
+    box-shadow:
+        0 4px 15px
+        rgba(0, 0, 0, 0.2);
+
+}
+
+
+/* =========================================================
+   CARD IMAGE
+========================================================= */
+
+.card-front img {
+
+    width:
+        78%;
+
+    height:
+        78%;
+
+    object-fit:
+        contain;
+
+    display:
+        block;
+
+    pointer-events:
+        none;
+
+    user-select:
+        none;
+
+    -webkit-user-drag:
+        none;
+
+}
+
+
+/* =========================================================
+   CARD HOVER
+========================================================= */
+
+.memory-card:not(.flipped):not(.matched):hover {
+
+    transform:
+        translateY(-4px)
+        scale(1.04);
+
+}
+
+
+/* =========================================================
+   MATCHED CARD
+========================================================= */
+
+.memory-card.matched {
+
+    cursor:
+        default;
+
+    animation:
+        matchedPop
+        0.35s
+        ease-out;
+
+}
+
+
+.memory-card.matched .card-front {
+
+    box-shadow:
+        0 0 14px
+        rgba(250, 147, 199, 0.8);
+
+    border-color:
+        rgba(250, 147, 199, 0.8);
+
+}
+
+
+@keyframes matchedPop {
+
+    0% {
+        transform:
+            scale(1);
+    }
+
+    45% {
+        transform:
+            scale(1.12);
+    }
+
+    100% {
+        transform:
+            scale(1);
+    }
+
+}
+
+
+/* =========================================================
+   WRONG MATCH
+========================================================= */
+
+.memory-card.wrong {
+
+    animation:
+        wrongShake
+        0.35s
+        ease;
+
+}
+
+
+@keyframes wrongShake {
+
+    0%,
+    100% {
+        transform:
+            translateX(0);
+    }
+
+    25% {
+        transform:
+            translateX(-5px);
+    }
+
+    50% {
+        transform:
+            translateX(5px);
+    }
+
+    75% {
+        transform:
+            translateX(-3px);
+    }
+
+}
+
+
+/* =========================================================
+   GAME BUTTON
+========================================================= */
+
+.game-actions {
+
+    display:
+        flex;
+
+    justify-content:
+        center;
+
+    margin-top:
+        18px;
+
+}
+
+
+.game-button {
+
+    padding:
+        10px 20px;
+
+    border:
+        none;
+
+    border-radius:
+        10px;
+
+    background:
+        rgba(255, 255, 255, 0.3);
+
+    color:
+        white;
+
+    font-family:
+        Georgia,
+        serif;
+
+    font-size:
+        16px;
+
+    cursor:
+        pointer;
+
+    transition:
+        0.3s;
+
+    -webkit-tap-highlight-color:
+        transparent;
+
+}
+
+
+.game-button:hover {
+
+    background:
+        rgba(255, 255, 255, 0.6);
+
+    color:
+        black;
+
+}
+
+
+.game-button:active {
+
+    transform:
+        scale(0.95);
+
+}
+
+
+/* =========================================================
+   TOP BUTTONS
+========================================================= */
+
+.top-button {
+
+    position:
+        fixed;
+
+    top:
+        18px;
+
+    z-index:
+        9999;
+
+    height:
+        40px;
+
+    padding:
+        0 16px;
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        center;
+
+    border:
+        1px solid
+        rgba(255, 255, 255, 0.3);
+
+    border-radius:
+        25px;
+
+    background:
+        rgba(0, 0, 0, 0.35);
+
+    color:
+        white;
+
+    font-family:
+        Georgia,
+        serif;
+
+    font-size:
+        14px;
+
+    line-height:
+        1;
+
+    box-shadow:
+        0 6px 20px
+        rgba(0, 0, 0, 0.25);
+
+    backdrop-filter:
+        blur(8px);
+
+    box-sizing:
+        border-box;
+
+    margin:
+        0;
+
+    transition:
+        transform
+        0.25s ease,
+        background
+        0.25s ease,
+        box-shadow
+        0.25s ease;
+
+    -webkit-tap-highlight-color:
+        transparent;
+
+}
+
+
+/* =========================================================
+   ARCADE
+========================================================= */
+
+.back-button {
+
+    left:
+        18px;
+
+    text-decoration:
+        none;
+
+}
+
+
+/* =========================================================
+   MUSIC
+========================================================= */
+
+.music-button {
+
+    right:
+        18px;
+
+}
+
+
+/* =========================================================
+   TOP BUTTON HOVER
+========================================================= */
+
+.top-button:hover {
+
+    transform:
+        translateY(-2px)
+        scale(1.03);
+
+    background:
+        rgba(255, 255, 255, 0.25);
+
+    color:
+        white;
+
+    box-shadow:
+        0 8px 25px
+        rgba(0, 0, 0, 0.3);
+
+}
+
+
+.top-button:active {
+
+    transform:
+        scale(0.95);
+
+}
+
+
+/* =========================================================
+   WIN EFFECT
+========================================================= */
+
+#gameBoard.game-complete {
+
+    animation:
+        boardGlow
+        1.2s
+        ease-in-out
+        infinite alternate;
+
+}
+
+
+@keyframes boardGlow {
+
+    from {
+        box-shadow:
+            inset 0 0 20px
+            rgba(0, 0, 0, 0.15);
+    }
+
+    to {
+        box-shadow:
+            inset 0 0 30px
+            rgba(255, 215, 0, 0.35),
+            0 0 20px
+            rgba(255, 215, 0, 0.35);
+    }
+
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 600px) {
+
+    body {
+
+        padding:
+            14px;
+
+    }
+
+
+    .game-container {
+
+        padding:
+            18px;
+
+        max-width:
+            100%;
+
+    }
+
+
+    h1 {
+
+        font-size:
+            2.4rem;
+
+    }
+
+
+    .subtitle {
+
+        margin-bottom:
+            15px;
+
+    }
+
+
+    .score-board {
+
+        gap:
+            7px;
+
+    }
+
+
+    .score-board div {
+
+        padding:
+            8px 4px;
+
+        font-size:
+            12px;
+
+    }
+
+
+    .score-board span {
+
+        font-size:
+            20px;
+
+    }
+
+
+    #gameBoard {
+
+        min-height:
+            280px;
+
+        border-radius:
+            12px;
+
+    }
+
+
+    .top-button {
+
+        top:
+            12px;
+
+        height:
+            36px;
+
+        padding:
+            0 13px;
+
+        font-size:
+            13px;
+
+    }
+
+
+    .back-button {
+
+        left:
+            12px;
+
+    }
+
+
+    .music-button {
+
+        right:
+            12px;
+
+    }
+
+
+    .game-button {
+
+        font-size:
+            15px;
+
+    }
+
+}
+
+
+/* =========================================================
+   SMALL PHONES
+========================================================= */
+
+@media (max-width: 380px) {
+
+    body {
+
+        padding:
+            10px;
+
+    }
+
+
+    .game-container {
+
+        padding:
+            14px;
+
+    }
+
+
+    h1 {
+
+        font-size:
+            2.15rem;
+
+    }
+
+
+    #gameBoard {
+
+        min-height:
+            250px;
+
+    }
+
+
+    .score-board div {
+
+        font-size:
+            11px;
+
+    }
+
+
+    .score-board span {
+
+        font-size:
+            18px;
+
+    }
+
+
+    .top-button {
+
+        height:
+            34px;
+
+        padding:
+            0 11px;
+
+        font-size:
+            12px;
+
+    }
+
+
+    .back-button {
+
+        left:
+            10px;
+
+    }
+
+
+    .music-button {
+
+        right:
+            10px;
+
+    }
+
+}
