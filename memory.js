@@ -492,204 +492,212 @@ function createBoard() {
     moves = 0;
     matchedPairs = 0;
 
-
-    movesDisplay.textContent =
-        "0";
+    movesDisplay.textContent = "0";
 
     pairsDisplay.textContent =
         `0 / ${totalPairs}`;
-
 
     gameBoard.classList.remove(
         "game-complete"
     );
 
 
-    /*
-        Generate random shape.
-    */
+    /* =========================================
+       GENERATE RANDOM SHAPE
+    ========================================= */
 
     let shape =
-        generateShape(
-            totalPairs * 2
-        );
-
-
-    shape =
         normaliseShape(
-            shape
+            generateShape(
+                totalPairs * 2
+            )
         );
 
 
-    /*
-        Find dimensions.
-    */
+    /* =========================================
+       FIND SHAPE SIZE
+    ========================================= */
 
     const maxX =
         Math.max(
             ...shape.map(
-                cell => cell.x
+                p => p.x
             )
         );
-
 
     const maxY =
         Math.max(
             ...shape.map(
-                cell => cell.y
+                p => p.y
             )
         );
 
 
-    const minCellSize =
-        getCardSize();
+    const columns =
+        maxX + 1;
+
+    const rows =
+        maxY + 1;
 
 
-    const gap =
-        CARD_GAP;
+    /* =========================================
+       AVAILABLE BOARD SPACE
+    ========================================= */
 
-
-    /*
-        Calculate board dimensions.
-    */
-
-    let boardWidth =
-        (maxX + 1) *
-        (minCellSize + gap);
-
-
-    let boardHeight =
-        (maxY + 1) *
-        (minCellSize + gap);
-
-
-    /*
-        Make sure the board has
-        enough space for the shape.
-    */
-
-    const maxBoardWidth =
-        Math.min(
-            gameBoard.parentElement
-                ? gameBoard.parentElement
-                    .clientWidth
-                : 650,
-            650
-        );
-
-
-    const maxBoardHeight =
-        window.innerWidth <= 600
-            ? 480
+    const parentWidth =
+        gameBoard.parentElement
+            ? gameBoard.parentElement.clientWidth
             : 600;
 
 
-    /*
-        Scale down large shapes.
-    */
-
-    let scale = 1;
+    const isMobile =
+        window.innerWidth <= 600;
 
 
-    if (
-        boardWidth >
-        maxBoardWidth
-    ) {
+    const horizontalPadding =
+        isMobile
+            ? 12
+            : 20;
 
-        scale =
+
+    const availableWidth =
+        Math.min(
+            parentWidth,
+            650
+        ) - horizontalPadding;
+
+
+    const availableHeight =
+        isMobile
+            ? 500
+            : 600;
+
+
+    /* =========================================
+       CARD SIZE
+    ========================================= */
+
+    let cardSize;
+
+
+    if (isMobile) {
+
+        /*
+            Mobile cards become smaller when
+            the shape gets wider.
+        */
+
+        cardSize =
             Math.min(
-                scale,
-                maxBoardWidth /
-                boardWidth
+                52,
+                Math.floor(
+                    (
+                        availableWidth -
+                        (
+                            columns - 1
+                        ) * 6
+                    ) /
+                    columns
+                )
+            );
+
+
+        /*
+            Prevent ridiculously tiny cards.
+        */
+
+        cardSize =
+            Math.max(
+                cardSize,
+                34
+            );
+
+    } else {
+
+        cardSize =
+            Math.min(
+                62,
+                Math.floor(
+                    (
+                        availableWidth -
+                        (
+                            columns - 1
+                        ) * 7
+                    ) /
+                    columns
+                )
             );
 
     }
 
 
-    if (
-        boardHeight >
-        maxBoardHeight
-    ) {
+    /* =========================================
+       GAP
+    ========================================= */
 
-        scale =
-            Math.min(
-                scale,
-                maxBoardHeight /
-                boardHeight
-            );
-
-    }
-
-
-    /*
-        Do not let cards become
-        impossibly tiny.
-    */
-
-    scale =
-        Math.max(
-            scale,
-            0.48
-        );
+    const gap =
+        isMobile
+            ? Math.max(
+                4,
+                Math.min(
+                    7,
+                    cardSize * 0.12
+                )
+            )
+            : 7;
 
 
-    const cardSize =
-        minCellSize *
-        scale;
+    /* =========================================
+       FINAL BOARD SIZE
+    ========================================= */
+
+    const boardWidth =
+        columns * cardSize +
+        (
+            columns - 1
+        ) * gap;
 
 
-    const actualGap =
-        gap *
-        scale;
+    const boardHeight =
+        rows * cardSize +
+        (
+            rows - 1
+        ) * gap;
 
-
-    boardWidth =
-        (maxX + 1) *
-        (cardSize + actualGap);
-
-
-    boardHeight =
-        (maxY + 1) *
-        (cardSize + actualGap);
-
-
-    /*
-        Give the board its size.
-    */
 
     gameBoard.style.width =
         `${Math.min(
             boardWidth,
-            maxBoardWidth
+            availableWidth
         )}px`;
 
 
     gameBoard.style.height =
         `${Math.min(
             boardHeight,
-            maxBoardHeight
+            availableHeight
         )}px`;
 
 
-    /*
-        Centre the shape.
-    */
+    gameBoard.style.margin =
+        "0 auto";
+
 
     gameBoard.style.position =
         "relative";
 
 
-    /*
-        Shuffle card data separately.
-    */
+    /* =========================================
+       CARD DATA
+    ========================================= */
 
     const shuffledCards =
         createCardData();
 
 
-    /*
-        Create cards.
-    */
+    /* =========================================
+       CREATE CARDS
+    ========================================= */
 
     shuffledCards.forEach(
         (cardData, index) => {
@@ -704,7 +712,7 @@ function createBoard() {
                     index,
                     position,
                     cardSize,
-                    actualGap
+                    gap
                 );
 
 
@@ -723,6 +731,7 @@ function createBoard() {
         `Find ${totalPairs} matching pairs 💕`;
 
 }
+
 
 
 /* =========================================================
