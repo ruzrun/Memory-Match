@@ -1078,3 +1078,20 @@ h1 {
     }
 
 }
+
+.card-emoji {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 100%;
+    height: 100%;
+
+    font-size: clamp(20px, 5vw, 36px);
+
+    line-height: 1;
+
+    user-select: none;
+    pointer-events: none;
+}
+
