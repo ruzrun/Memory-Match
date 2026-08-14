@@ -1268,13 +1268,6 @@ window.addEventListener(
 
 function rebuildPositions() {
 
-    /*
-        Get the current cards.
-
-        Keep their existing order
-        and matched state.
-    */
-
     if (
         !cards.length
     ) {
@@ -1282,7 +1275,7 @@ function rebuildPositions() {
     }
 
 
-    const positions =
+    const shape =
         normaliseShape(
             generateShape(
                 cards.length
@@ -1292,7 +1285,7 @@ function rebuildPositions() {
 
     const maxX =
         Math.max(
-            ...positions.map(
+            ...shape.map(
                 p => p.x
             )
         );
@@ -1300,117 +1293,130 @@ function rebuildPositions() {
 
     const maxY =
         Math.max(
-            ...positions.map(
+            ...shape.map(
                 p => p.y
             )
         );
 
 
-    const baseSize =
-        getCardSize();
+    const columns =
+        maxX + 1;
+
+    const rows =
+        maxY + 1;
 
 
-    const gap =
-        CARD_GAP;
-
-
-    let boardWidth =
-        (maxX + 1) *
-        (baseSize + gap);
-
-
-    let boardHeight =
-        (maxY + 1) *
-        (baseSize + gap);
-
-
-    const maxBoardWidth =
-        Math.min(
-            gameBoard.parentElement
-                ? gameBoard.parentElement
-                    .clientWidth
-                : 650,
-            650
-        );
-
-
-    const maxBoardHeight =
-        window.innerWidth <= 600
-            ? 480
+    const parentWidth =
+        gameBoard.parentElement
+            ? gameBoard.parentElement.clientWidth
             : 600;
 
 
-    let scale = 1;
+    const isMobile =
+        window.innerWidth <= 600;
 
 
-    if (
-        boardWidth >
-        maxBoardWidth
-    ) {
+    const horizontalPadding =
+        isMobile
+            ? 12
+            : 20;
 
-        scale =
+
+    const availableWidth =
+        Math.min(
+            parentWidth,
+            650
+        ) - horizontalPadding;
+
+
+    const availableHeight =
+        isMobile
+            ? 500
+            : 600;
+
+
+    let cardSize;
+
+
+    if (isMobile) {
+
+        cardSize =
             Math.min(
-                scale,
-                maxBoardWidth /
-                boardWidth
+                52,
+                Math.floor(
+                    (
+                        availableWidth -
+                        (
+                            columns - 1
+                        ) * 6
+                    ) /
+                    columns
+                )
+            );
+
+
+        cardSize =
+            Math.max(
+                cardSize,
+                34
+            );
+
+    } else {
+
+        cardSize =
+            Math.min(
+                62,
+                Math.floor(
+                    (
+                        availableWidth -
+                        (
+                            columns - 1
+                        ) * 7
+                    ) /
+                    columns
+                )
             );
 
     }
 
 
-    if (
-        boardHeight >
-        maxBoardHeight
-    ) {
-
-        scale =
-            Math.min(
-                scale,
-                maxBoardHeight /
-                boardHeight
-            );
-
-    }
+    const gap =
+        isMobile
+            ? Math.max(
+                4,
+                Math.min(
+                    7,
+                    cardSize * 0.12
+                )
+            )
+            : 7;
 
 
-    scale =
-        Math.max(
-            scale,
-            0.48
-        );
+    const boardWidth =
+        columns * cardSize +
+        (
+            columns - 1
+        ) * gap;
 
 
-    const cardSize =
-        baseSize *
-        scale;
-
-
-    const actualGap =
-        gap *
-        scale;
-
-
-    boardWidth =
-        (maxX + 1) *
-        (cardSize + actualGap);
-
-
-    boardHeight =
-        (maxY + 1) *
-        (cardSize + actualGap);
+    const boardHeight =
+        rows * cardSize +
+        (
+            rows - 1
+        ) * gap;
 
 
     gameBoard.style.width =
         `${Math.min(
             boardWidth,
-            maxBoardWidth
+            availableWidth
         )}px`;
 
 
     gameBoard.style.height =
         `${Math.min(
             boardHeight,
-            maxBoardHeight
+            availableHeight
         )}px`;
 
 
@@ -1418,7 +1424,7 @@ function rebuildPositions() {
         (card, index) => {
 
             const position =
-                positions[index];
+                shape[index];
 
 
             card.style.width =
@@ -1431,20 +1437,25 @@ function rebuildPositions() {
 
             card.style.left =
                 `${position.x *
-                    (cardSize + actualGap)
+                    (
+                        cardSize +
+                        gap
+                    )
                 }px`;
 
 
             card.style.top =
                 `${position.y *
-                    (cardSize + actualGap)
+                    (
+                        cardSize +
+                        gap
+                    )
                 }px`;
 
         }
     );
 
 }
-
 
 /* =========================================================
    MUSIC
