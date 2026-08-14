@@ -295,126 +295,308 @@ function createCardData() {
 
 function generateShape(count) {
 
-    /*
-        We create a collection of
-        connected coordinates.
-
-        The shape begins from the centre
-        and grows randomly.
-
-        This means the result can become:
-
-             XX
-           XXXXX
-         XXXXXXXX
-           XXXXX
-
-        instead of a normal rectangle.
-    */
-
-
-    const cells =
-        new Set();
+    const cells = new Set();
 
     const positions = [];
 
-
-    const startX = 0;
-    const startY = 0;
-
-
-    cells.add(
-        `${startX},${startY}`
-    );
-
-
-    positions.push({
-        x: startX,
-        y: startY
-    });
-
-
     const directions = [
-
         { x: 1, y: 0 },
         { x: -1, y: 0 },
         { x: 0, y: 1 },
         { x: 0, y: -1 }
-
     ];
 
 
-    let safety = 0;
+    /* =========================================
+       HOW WIDE/TALL THE SHAPE IS ALLOWED TO BE
+    ========================================= */
 
+    /*
+        This keeps large games compact.
+
+        36 cards → roughly 6 × 6
+        50 cards → roughly 7 × 7
+    */
+
+    const targetSize =
+        Math.ceil(
+            Math.sqrt(count)
+        );
+
+
+    const maxDimension =
+        Math.max(
+            3,
+            targetSize + 2
+        );
+
+
+    /* =========================================
+       START IN THE CENTRE
+    ========================================= */
+
+    cells.add("0,0");
+
+    positions.push({
+        x: 0,
+        y: 0
+    });
+
+
+    /* =========================================
+       BUILD THE SHAPE
+    ========================================= */
 
     while (
-        positions.length < count &&
-        safety < 10000
+        positions.length < count
     ) {
 
-        safety++;
+        const possible = [];
 
 
         /*
-            Pick an existing cell.
+            Look around every existing card
+            and find empty neighbouring spaces.
         */
 
-        const base =
-            positions[
-                randomNumber(
-                    0,
-                    positions.length - 1
-                )
-            ];
+        positions.forEach(
+            position => {
+
+                directions.forEach(
+                    direction => {
+
+                        const x =
+                            position.x +
+                            direction.x;
+
+                        const y =
+                            position.y +
+                            direction.y;
+
+
+                        const key =
+                            `${x},${y}`;
+
+
+                        if (
+                            !cells.has(key)
+                        ) {
+
+                            possible.push({
+                                x: x,
+                                y: y
+                            });
+
+                        }
+
+                    }
+                );
+
+            }
+        );
 
 
         /*
-            Random direction.
+            Remove duplicates.
         */
 
-        const direction =
-            directions[
+        const unique =
+            [];
+
+
+        const seen =
+            new Set();
+
+
+        possible.forEach(
+            position => {
+
+                const key =
+                    `${position.x},${position.y}`;
+
+
+                if (
+                    !seen.has(key)
+                ) {
+
+                    seen.add(key);
+
+                    unique.push(
+                        position
+                    );
+
+                }
+
+            }
+        );
+
+
+        /*
+            Score each possible position.
+
+            We prefer positions that keep
+            the overall shape compact.
+        */
+
+        const scored =
+            unique.map(
+                position => {
+
+                    const test =
+                        [
+                            ...positions,
+                            position
+                        ];
+
+
+                    const xs =
+                        test.map(
+                            p => p.x
+                        );
+
+
+                    const ys =
+                        test.map(
+                            p => p.y
+                        );
+
+
+                    const minX =
+                        Math.min(...xs);
+
+                    const maxX =
+                        Math.max(...xs);
+
+                    const minY =
+                        Math.min(...ys);
+
+                    const maxY =
+                        Math.max(...ys);
+
+
+                    const width =
+                        maxX - minX + 1;
+
+                    const height =
+                        maxY - minY + 1;
+
+
+                    const area =
+                        width * height;
+
+
+                    /*
+                        Penalise shapes that become
+                        extremely wide or tall.
+                    */
+
+                    let penalty = 0;
+
+
+                    if (
+                        width >
+                        maxDimension
+                    ) {
+
+                        penalty +=
+                            1000 *
+                            (
+                                width -
+                                maxDimension
+                            );
+
+                    }
+
+
+                    if (
+                        height >
+                        maxDimension
+                    ) {
+
+                        penalty +=
+                            1000 *
+                            (
+                                height -
+                                maxDimension
+                            );
+
+                    }
+
+
+                    /*
+                        Prefer compact areas,
+                        but keep some randomness.
+                    */
+
+                    const score =
+                        area +
+                        penalty +
+                        Math.random() * 8;
+
+
+                    return {
+                        position,
+                        score
+                    };
+
+                }
+            );
+
+
+        /*
+            Sort from best to worst.
+        */
+
+        scored.sort(
+            (a, b) =>
+                a.score -
+                b.score
+        );
+
+
+        /*
+            Don't always choose the absolute
+            best position.
+
+            This gives us different shapes
+            every game.
+        */
+
+        const choices =
+            scored.slice(
+                0,
+                Math.min(
+                    5,
+                    scored.length
+                )
+            );
+
+
+        const chosen =
+            choices[
                 randomNumber(
                     0,
-                    directions.length - 1
+                    choices.length - 1
                 )
-            ];
-
-
-        const newX =
-            base.x + direction.x;
-
-        const newY =
-            base.y + direction.y;
+            ].position;
 
 
         const key =
-            `${newX},${newY}`;
+            `${chosen.x},${chosen.y}`;
 
 
-        if (
-            !cells.has(key)
-        ) {
+        cells.add(key);
 
-            cells.add(key);
-
-            positions.push({
-                x: newX,
-                y: newY
-            });
-
-        }
+        positions.push(
+            chosen
+        );
 
     }
 
 
-    /*
-        Shuffle the generated
-        positions so the card order
-        isn't predictable.
-    */
-
-    return shuffle(positions);
+    return shuffle(
+        positions
+    );
 
 }
 
