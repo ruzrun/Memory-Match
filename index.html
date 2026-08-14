@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Memory Match 🃏</title>
+
+    <link
+        rel="stylesheet"
+        href="memory.css"
+    >
+
+</head>
+
+
+<body>
+
+
+    <!-- BACK TO ARCADE -->
+
+    <a
+        href="https://ruzrun.github.io/arcade-game/"
+        class="top-button back-button"
+    >
+        🎮 Arcade
+    </a>
+
+
+    <!-- MUSIC -->
+
+    <button
+        id="musicButton"
+        class="top-button music-button"
+    >
+        🎵 Music On
+    </button>
+
+
+
+    <!-- GAME -->
+
+    <div class="game-container">
+
+
+        <h1>
+            Memory Match 🃏
+        </h1>
+
+
+        <p class="subtitle">
+            Find every matching pair ✨
+        </p>
+
+
+
+        <!-- SCORE -->
+
+        <div class="score-board">
+
+
+            <div>
+
+                Moves
+
+                <span id="moves">
+                    0
+                </span>
+
+            </div>
+
+
+            <div>
+
+                Pairs
+
+                <span id="pairs">
+                    0
+                </span>
+
+            </div>
+
+
+            <div>
+
+                Best
+
+                <span id="bestScore">
+                    0
+                </span>
+
+            </div>
+
+
+        </div>
+
+
+
+        <!-- GAME MESSAGE -->
+
+        <p id="gameMessage">
+            Find the matching cards 💕
+        </p>
+
+
+
+        <!-- RANDOM BOARD -->
+
+        <div id="gameBoard"></div>
+
+
+
+        <!-- ACTIONS -->
+
+        <div class="game-actions">
+
+
+            <button
+                id="restartButton"
+                class="game-button"
+            >
+                New Game 🔄
+            </button>
+
+
+        </div>
+
+
+    </div>
+
+
+
+    <script src="memory.js"></script>
+
+
+</body>
+
+</html>
