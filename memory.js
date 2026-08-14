@@ -1,5 +1,6 @@
 /* =========================================================
    MEMORY MATCH 🃏
+   Emoji + Image Edition
    Fixed 12 × 12 Board
 ========================================================= */
 
@@ -19,14 +20,88 @@ const DESKTOP_BOARD_HEIGHT = 560;
 const MOBILE_PADDING = 8;
 const DESKTOP_PADDING = 12;
 
-const CARD_GAP = 5;
+const MOBILE_GAP = 4;
+const DESKTOP_GAP = 6;
 
 const FLIP_BACK_DELAY = 800;
 
 
 /* =========================================================
-   CARD IMAGES
+   EMOJI CARDS
 ========================================================= */
+
+const cardEmojis = [
+
+    "🐶",
+    "🐱",
+    "🐼",
+    "🦊",
+    "🐸",
+    "🐵",
+    "🦄",
+    "🐰",
+    "🐨",
+    "🐯",
+    "🦁",
+    "🐻",
+    "🐷",
+    "🐙",
+    "🦋",
+    "🌸",
+    "⭐",
+    "🌙",
+    "🍓",
+    "🍉",
+    "🍕",
+    "🍔",
+    "🍩",
+    "🎸",
+    "🎮",
+    "💌",
+    "❤️",
+    "💎",
+    "🌈",
+    "☀️",
+    "🌻",
+    "🍀",
+    "🍒",
+    "🍪",
+    "🎀",
+    "🎁",
+    "🚀",
+    "🌍",
+    "⚽",
+    "🏀",
+    "🎧",
+    "🎨",
+    "📚",
+    "☕",
+    "🍰",
+    "🧸",
+    "🐣",
+    "🐝",
+    "🌺",
+    "✨"
+
+];
+
+
+/* =========================================================
+   IMAGE CARDS
+========================================================= */
+
+/*
+    Put your images inside:
+
+    images/image1.png
+    images/image2.png
+    images/image3.png
+
+    etc.
+
+    If you don't have image cards yet,
+    simply leave this list empty.
+*/
 
 const cardImages = [
 
@@ -54,38 +129,13 @@ const cardImages = [
     "images/image22.png",
     "images/image23.png",
     "images/image24.png",
-    "images/image25.png",
-    "images/image26.png",
-    "images/image27.png",
-    "images/image28.png",
-    "images/image29.png",
-    "images/image30.png",
-    "images/image31.png",
-    "images/image32.png",
-    "images/image33.png",
-    "images/image34.png",
-    "images/image35.png",
-    "images/image36.png",
-    "images/image37.png",
-    "images/image38.png",
-    "images/image39.png",
-    "images/image40.png",
-    "images/image41.png",
-    "images/image42.png",
-    "images/image43.png",
-    "images/image44.png",
-    "images/image45.png",
-    "images/image46.png",
-    "images/image47.png",
-    "images/image48.png",
-    "images/image49.png",
-    "images/image50.png"
+    "images/image25.png"
 
 ];
 
 
 /* =========================================================
-   DOM
+   DOM ELEMENTS
 ========================================================= */
 
 const gameBoard =
@@ -122,7 +172,9 @@ let secondCard = null;
 let lockBoard = false;
 
 let moves = 0;
+
 let matchedPairs = 0;
+
 let totalPairs = 0;
 
 
@@ -201,21 +253,19 @@ function shuffle(array) {
 
 
 /* =========================================================
-   CHOOSE PAIRS
+   CHOOSE NUMBER OF PAIRS
 ========================================================= */
 
 function choosePairCount() {
 
-    /*
-        More small games,
-        fewer huge games.
-
-        Maximum is always 25 pairs.
-    */
-
     const random =
         Math.random();
 
+
+    /*
+        Smaller games are more common.
+        Very large games are still possible.
+    */
 
     if (random < 0.15) {
 
@@ -269,8 +319,64 @@ function choosePairCount() {
 
     return randomNumber(
         23,
-        25
+        MAX_PAIRS
     );
+
+}
+
+
+/* =========================================================
+   CREATE AVAILABLE CARD TYPES
+========================================================= */
+
+function createAvailableCards() {
+
+    const available = [];
+
+
+    /*
+        Add emojis.
+    */
+
+    cardEmojis.forEach(
+        (emoji, index) => {
+
+            available.push({
+
+                type: "emoji",
+
+                value: emoji,
+
+                sourceIndex: index
+
+            });
+
+        }
+    );
+
+
+    /*
+        Add images.
+    */
+
+    cardImages.forEach(
+        (image, index) => {
+
+            available.push({
+
+                type: "image",
+
+                value: image,
+
+                sourceIndex: index
+
+            });
+
+        }
+    );
+
+
+    return available;
 
 }
 
@@ -281,16 +387,30 @@ function choosePairCount() {
 
 function createCardData() {
 
+    const availableCards =
+        createAvailableCards();
+
+
+    /*
+        Make sure we never request
+        more unique cards than we have.
+    */
+
     totalPairs =
         Math.min(
             choosePairCount(),
-            cardImages.length
+            availableCards.length,
+            MAX_PAIRS
         );
 
 
-    const selectedImages =
+    /*
+        Randomly select unique cards.
+    */
+
+    const selectedCards =
         shuffle(
-            cardImages
+            availableCards
         ).slice(
             0,
             totalPairs
@@ -300,14 +420,20 @@ function createCardData() {
     const result = [];
 
 
-    selectedImages.forEach(
-        (image, index) => {
+    /*
+        Create two copies of every card.
+    */
+
+    selectedCards.forEach(
+        (card, index) => {
 
             result.push({
 
                 id: index,
 
-                image: image
+                type: card.type,
+
+                value: card.value
 
             });
 
@@ -316,13 +442,19 @@ function createCardData() {
 
                 id: index,
 
-                image: image
+                type: card.type,
+
+                value: card.value
 
             });
 
         }
     );
 
+
+    /*
+        Shuffle the complete deck.
+    */
 
     return shuffle(
         result
@@ -332,25 +464,20 @@ function createCardData() {
 
 
 /* =========================================================
-   FIXED BOARD
+   SETUP FIXED BOARD
 ========================================================= */
 
 function setupBoard() {
 
-    const mobile =
+    const isMobile =
         window.innerWidth <= 600;
 
 
     const height =
-        mobile
+        isMobile
             ? MOBILE_BOARD_HEIGHT
             : DESKTOP_BOARD_HEIGHT;
 
-
-    /*
-        The board ALWAYS has the same
-        physical size for the device.
-    */
 
     gameBoard.style.width =
         "100%";
@@ -379,23 +506,22 @@ function setupBoard() {
 
 
 /* =========================================================
-   GENERATE COMPACT RANDOM PATTERN
+   GENERATE RANDOM COMPACT PATTERN
 ========================================================= */
 
 function generatePattern(count) {
 
     /*
-        We use the fixed 12 × 12 board.
+        The board is always 12 × 12.
 
-        The centre of the board is preferred.
+        We don't resize the board according
+        to the number of cards.
 
-        Cards closer to the centre have a
-        higher chance of being selected.
+        Instead, we select positions close
+        to the centre.
 
-        Randomness is still added, so every
-        game has a different pattern.
+        This keeps large games compact.
     */
-
 
     const candidates = [];
 
@@ -431,15 +557,15 @@ function generatePattern(count) {
 
 
             /*
-                Lower score = more likely.
+                Add randomness.
 
-                Random component means the
-                shape changes every game.
+                A small random value means
+                every game has a different shape.
             */
 
             const score =
                 distance +
-                Math.random() * 3.8;
+                Math.random() * 3.5;
 
 
             candidates.push({
@@ -458,7 +584,7 @@ function generatePattern(count) {
 
 
     /*
-        Sort by compactness.
+        Sort from centre outward.
     */
 
     candidates.sort(
@@ -469,10 +595,10 @@ function generatePattern(count) {
 
 
     /*
-        Take the required number.
+        Select the required number.
     */
 
-    let selected =
+    const selected =
         candidates.slice(
             0,
             count
@@ -480,63 +606,60 @@ function generatePattern(count) {
 
 
     /*
-        Shuffle the selected positions
-        so card/image order doesn't follow
-        the pattern.
+        Shuffle positions.
+
+        This prevents the card deck order
+        from determining the visual pattern.
     */
 
-    selected =
-        shuffle(
-            selected
-        );
-
-
-    return selected;
+    return shuffle(
+        selected
+    );
 
 }
 
 
 /* =========================================================
-   GET CARD SIZE
+   GET CARD DIMENSIONS
 ========================================================= */
 
-function getCardSize() {
+function getCardDimensions() {
+
+    const isMobile =
+        window.innerWidth <= 600;
+
 
     const boardWidth =
         gameBoard.clientWidth;
 
 
-    const mobile =
-        window.innerWidth <= 600;
-
-
     const padding =
-        mobile
+        isMobile
             ? MOBILE_PADDING
             : DESKTOP_PADDING;
 
 
     const gap =
-        mobile
-            ? 4
-            : CARD_GAP;
+        isMobile
+            ? MOBILE_GAP
+            : DESKTOP_GAP;
 
 
-    /*
-        12 logical columns.
-
-        This means even a 50-card game
-        has a guaranteed safe position.
-    */
-
-    const available =
+    const availableWidth =
         boardWidth -
         padding * 2;
 
 
-    const size =
+    /*
+        12 columns.
+
+        Every card has a guaranteed
+        position within the board.
+    */
+
+    const cardSize =
         (
-            available -
+            availableWidth -
             (
                 BOARD_SIZE - 1
             ) * gap
@@ -546,13 +669,16 @@ function getCardSize() {
 
     return {
 
-        size: Math.floor(
-            size
-        ),
+        size:
+            Math.floor(
+                cardSize
+            ),
 
-        gap: gap,
+        gap:
+            gap,
 
-        padding: padding
+        padding:
+            padding
 
     };
 
@@ -565,19 +691,31 @@ function getCardSize() {
 
 function createBoard() {
 
-    gameBoard.innerHTML = "";
+    gameBoard.innerHTML =
+        "";
+
 
     cards = [];
 
-    firstCard = null;
 
-    secondCard = null;
+    firstCard =
+        null;
 
-    lockBoard = false;
 
-    moves = 0;
+    secondCard =
+        null;
 
-    matchedPairs = 0;
+
+    lockBoard =
+        false;
+
+
+    moves =
+        0;
+
+
+    matchedPairs =
+        0;
 
 
     if (movesDisplay) {
@@ -609,62 +747,44 @@ function createBoard() {
 
 
     /*
-        Get card positions.
+        Create deck.
+
+        IMPORTANT:
+        createCardData() determines
+        the number of pairs.
     */
 
-    const pattern =
-        generatePattern(
-            totalPairs * 2
-        );
-
-
-    /*
-        Get physical card size.
-    */
-
-    const dimensions =
-        getCardSize();
-
-
-    const cardSize =
-        dimensions.size;
-
-    const gap =
-        dimensions.gap;
-
-    const padding =
-        dimensions.padding;
-
-
-    /*
-        Create shuffled card data.
-    */
-
-    const shuffledCards =
+    const deck =
         createCardData();
 
 
     /*
-        Generate the pattern again if
-        card count was changed by
-        createCardData().
+        Generate enough random positions.
     */
 
-    const finalPattern =
+    const pattern =
         generatePattern(
-            shuffledCards.length
+            deck.length
         );
 
 
     /*
-        Create cards.
+        Calculate card size.
     */
 
-    shuffledCards.forEach(
+    const dimensions =
+        getCardDimensions();
+
+
+    /*
+        Create every card.
+    */
+
+    deck.forEach(
         (cardData, index) => {
 
             const position =
-                finalPattern[index];
+                pattern[index];
 
 
             const card =
@@ -672,9 +792,9 @@ function createBoard() {
                     cardData,
                     index,
                     position,
-                    cardSize,
-                    gap,
-                    padding
+                    dimensions.size,
+                    dimensions.gap,
+                    dimensions.padding
                 );
 
 
@@ -690,10 +810,6 @@ function createBoard() {
         }
     );
 
-
-    /*
-        Message.
-    */
 
     if (gameMessage) {
 
@@ -728,6 +844,10 @@ function createCard(
         "memory-card";
 
 
+    /*
+        Matching ID.
+    */
+
     card.dataset.id =
         cardData.id;
 
@@ -737,7 +857,23 @@ function createCard(
 
 
     /*
-        Physical size.
+        Remember logical position.
+
+        This allows the card to remain
+        in the same place when the screen
+        is resized.
+    */
+
+    card.dataset.gridX =
+        position.x;
+
+
+    card.dataset.gridY =
+        position.y;
+
+
+    /*
+        Size.
     */
 
     card.style.width =
@@ -749,7 +885,7 @@ function createCard(
 
 
     /*
-        Position inside fixed board.
+        Position.
     */
 
     card.style.left =
@@ -773,7 +909,7 @@ function createCard(
 
 
     /*
-        Inner.
+        INNER
     */
 
     const inner =
@@ -787,7 +923,7 @@ function createCard(
 
 
     /*
-        Back.
+        BACK
     */
 
     const back =
@@ -805,7 +941,7 @@ function createCard(
 
 
     /*
-        Front.
+        FRONT
     */
 
     const front =
@@ -818,28 +954,88 @@ function createCard(
         "card-front";
 
 
-    const image =
-        document.createElement(
-            "img"
+    /*
+        IMAGE CARD
+    */
+
+    if (
+        cardData.type ===
+        "image"
+    ) {
+
+        const image =
+            document.createElement(
+                "img"
+            );
+
+
+        image.src =
+            cardData.value;
+
+
+        image.alt =
+            "Memory card";
+
+
+        image.draggable =
+            false;
+
+
+        /*
+            If image fails to load,
+            show a cute fallback.
+        */
+
+        image.onerror =
+            () => {
+
+                image.style.display =
+                    "none";
+
+
+                front.textContent =
+                    "🖼️";
+
+            };
+
+
+        front.appendChild(
+            image
         );
 
-
-    image.src =
-        cardData.image;
+    }
 
 
-    image.alt =
-        "Memory card";
+    /*
+        EMOJI CARD
+    */
+
+    else {
+
+        const emoji =
+            document.createElement(
+                "span"
+            );
 
 
-    image.draggable =
-        false;
+        emoji.className =
+            "card-emoji";
 
 
-    front.appendChild(
-        image
-    );
+        emoji.textContent =
+            cardData.value;
 
+
+        front.appendChild(
+            emoji
+        );
+
+    }
+
+
+    /*
+        Build card.
+    */
 
     inner.appendChild(
         back
@@ -883,7 +1079,9 @@ function createCard(
 
 function handleCardClick(card) {
 
-    if (lockBoard) {
+    if (
+        lockBoard
+    ) {
         return;
     }
 
@@ -913,12 +1111,22 @@ function handleCardClick(card) {
     }
 
 
+    /*
+        Flip selected card.
+    */
+
     flipCard(
         card
     );
 
 
-    if (!firstCard) {
+    /*
+        First card.
+    */
+
+    if (
+        !firstCard
+    ) {
 
         firstCard =
             card;
@@ -936,6 +1144,10 @@ function handleCardClick(card) {
 
     }
 
+
+    /*
+        Second card.
+    */
 
     secondCard =
         card;
@@ -984,12 +1196,12 @@ function checkForMatch() {
     }
 
 
-    const match =
+    const isMatch =
         firstCard.dataset.id ===
         secondCard.dataset.id;
 
 
-    if (match) {
+    if (isMatch) {
 
         handleMatch();
 
@@ -1136,7 +1348,7 @@ function resetTurn() {
 
 
 /* =========================================================
-   WIN
+   WIN GAME
 ========================================================= */
 
 function winGame() {
@@ -1151,8 +1363,6 @@ function winGame() {
 
 
     /*
-        Score based on efficiency.
-
         Fewer moves = higher score.
     */
 
@@ -1216,22 +1426,10 @@ function winGame() {
 
 
 /* =========================================================
-   NEW GAME
+   START NEW GAME
 ========================================================= */
 
 function newGame() {
-
-    /*
-        Choose the number of pairs
-        BEFORE creating the board.
-    */
-
-    totalPairs =
-        Math.min(
-            choosePairCount(),
-            cardImages.length
-        );
-
 
     createBoard();
 
@@ -1239,7 +1437,7 @@ function newGame() {
 
 
 /* =========================================================
-   RESTART
+   RESTART BUTTON
 ========================================================= */
 
 if (restartButton) {
@@ -1287,7 +1485,7 @@ window.addEventListener(
 
 
 /* =========================================================
-   REPOSITION EXISTING CARDS
+   REPOSITION CARDS
 ========================================================= */
 
 function repositionCards() {
@@ -1299,40 +1497,20 @@ function repositionCards() {
     }
 
 
-    /*
-        IMPORTANT:
-
-        We don't create a new random
-        pattern here.
-
-        We only resize the existing
-        cards so the current game
-        doesn't suddenly change.
-    */
-
-
-    const mobile =
-        window.innerWidth <= 600;
-
-
-    const padding =
-        mobile
-            ? MOBILE_PADDING
-            : DESKTOP_PADDING;
-
-
-    const gap =
-        mobile
-            ? 4
-            : CARD_GAP;
-
-
     const dimensions =
-        getCardSize();
+        getCardDimensions();
 
 
     const cardSize =
         dimensions.size;
+
+
+    const gap =
+        dimensions.gap;
+
+
+    const padding =
+        dimensions.padding;
 
 
     cards.forEach(
@@ -1349,13 +1527,6 @@ function repositionCards() {
                     card.dataset.gridY
                 );
 
-
-            /*
-                Older cards may not have
-                grid coordinates.
-
-                In that case don't move them.
-            */
 
             if (
                 Number.isNaN(x) ||
@@ -1422,6 +1593,10 @@ let musicEnabled =
     true;
 
 
+/* =========================================================
+   MUSIC BUTTON
+========================================================= */
+
 if (musicButton) {
 
     musicButton.addEventListener(
@@ -1432,7 +1607,9 @@ if (musicButton) {
                 !musicEnabled;
 
 
-            if (musicEnabled) {
+            if (
+                musicEnabled
+            ) {
 
                 backgroundMusic
                     .play()
@@ -1461,7 +1638,7 @@ if (musicButton) {
 
 
 /* =========================================================
-   START MUSIC AFTER FIRST TOUCH/CLICK
+   AUTOPLAY AFTER FIRST INTERACTION
 ========================================================= */
 
 document.addEventListener(
@@ -1489,7 +1666,7 @@ document.addEventListener(
 
 
 /* =========================================================
-   START GAME
+   START
 ========================================================= */
 
 newGame();
