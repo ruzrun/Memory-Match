@@ -106,6 +106,7 @@ const cardEmojis = [
 const cardImages = [
 
     "images/image1.png",
+   /*
     "images/image2.png",
     "images/image3.png",
     "images/image4.png",
@@ -129,7 +130,7 @@ const cardImages = [
     "images/image22.png",
     "images/image23.png",
     "images/image24.png",
-    "images/image25.png"
+    "images/image25.png"*/
 
 ];
 
