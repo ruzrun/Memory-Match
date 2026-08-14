@@ -1,5 +1,6 @@
 /* =========================================================
    MEMORY MATCH 🃏
+   Fixed 12 × 12 Board
 ========================================================= */
 
 
@@ -10,30 +11,22 @@
 const MIN_PAIRS = 2;
 const MAX_PAIRS = 25;
 
-const CARD_SIZE_DESKTOP = 58;
-const CARD_SIZE_MOBILE = 52;
+const BOARD_SIZE = 12;
 
-const CARD_GAP = 7;
+const MOBILE_BOARD_HEIGHT = 460;
+const DESKTOP_BOARD_HEIGHT = 560;
+
+const MOBILE_PADDING = 8;
+const DESKTOP_PADDING = 12;
+
+const CARD_GAP = 5;
 
 const FLIP_BACK_DELAY = 800;
 
 
 /* =========================================================
-   IMAGE LIST
+   CARD IMAGES
 ========================================================= */
-
-/*
-    Put your images inside:
-
-    images/image1.png
-    images/image2.png
-    ...
-
-    You can add as many as you want.
-
-    The game randomly chooses the number of images
-    it needs for the current game.
-*/
 
 const cardImages = [
 
@@ -130,8 +123,12 @@ let lockBoard = false;
 
 let moves = 0;
 let matchedPairs = 0;
-
 let totalPairs = 0;
+
+
+/* =========================================================
+   BEST SCORE
+========================================================= */
 
 let bestScore =
     Number(
@@ -141,12 +138,12 @@ let bestScore =
     ) || 0;
 
 
-/* =========================================================
-   UPDATE BEST SCORE
-========================================================= */
+if (bestScoreDisplay) {
 
-bestScoreDisplay.textContent =
-    bestScore;
+    bestScoreDisplay.textContent =
+        bestScore;
+
+}
 
 
 /* =========================================================
@@ -172,6 +169,7 @@ function shuffle(array) {
     const result =
         [...array];
 
+
     for (
         let i = result.length - 1;
         i > 0;
@@ -184,6 +182,7 @@ function shuffle(array) {
                 (i + 1)
             );
 
+
         [
             result[i],
             result[j]
@@ -195,51 +194,83 @@ function shuffle(array) {
 
     }
 
+
     return result;
 
 }
 
 
 /* =========================================================
-   CHOOSE NUMBER OF PAIRS
+   CHOOSE PAIRS
 ========================================================= */
 
 function choosePairCount() {
 
     /*
-        Randomly choose between
-        2 and 25 pairs.
+        More small games,
+        fewer huge games.
 
-        Smaller games are slightly
-        more common so the player
-        doesn't constantly get huge
-        games.
+        Maximum is always 25 pairs.
     */
 
     const random =
         Math.random();
 
-    if (random < 0.18) {
-        return 2;
+
+    if (random < 0.15) {
+
+        return randomNumber(
+            2,
+            4
+        );
+
     }
+
 
     if (random < 0.32) {
-        return randomNumber(3, 5);
+
+        return randomNumber(
+            5,
+            8
+        );
+
     }
+
 
     if (random < 0.55) {
-        return randomNumber(6, 10);
+
+        return randomNumber(
+            9,
+            13
+        );
+
     }
 
-    if (random < 0.78) {
-        return randomNumber(11, 16);
+
+    if (random < 0.75) {
+
+        return randomNumber(
+            14,
+            18
+        );
+
     }
 
-    if (random < 0.93) {
-        return randomNumber(17, 21);
+
+    if (random < 0.92) {
+
+        return randomNumber(
+            19,
+            22
+        );
+
     }
 
-    return randomNumber(22, 25);
+
+    return randomNumber(
+        23,
+        25
+    );
 
 }
 
@@ -256,389 +287,211 @@ function createCardData() {
             cardImages.length
         );
 
+
     const selectedImages =
-        shuffle(cardImages)
-            .slice(
-                0,
-                totalPairs
-            );
+        shuffle(
+            cardImages
+        ).slice(
+            0,
+            totalPairs
+        );
 
 
-    let data = [];
+    const result = [];
 
 
     selectedImages.forEach(
         (image, index) => {
 
-            data.push({
+            result.push({
+
                 id: index,
+
                 image: image
+
             });
 
-            data.push({
+
+            result.push({
+
                 id: index,
+
                 image: image
+
             });
 
         }
     );
 
 
-    return shuffle(data);
+    return shuffle(
+        result
+    );
 
 }
 
 
 /* =========================================================
-   GENERATE RANDOM CONNECTED SHAPE
+   FIXED BOARD
 ========================================================= */
 
-function generateShape(count) {
+function setupBoard() {
 
-    const cells = new Set();
-
-    const positions = [];
-
-    const directions = [
-        { x: 1, y: 0 },
-        { x: -1, y: 0 },
-        { x: 0, y: 1 },
-        { x: 0, y: -1 }
-    ];
+    const mobile =
+        window.innerWidth <= 600;
 
 
-    /* =========================================
-       HOW WIDE/TALL THE SHAPE IS ALLOWED TO BE
-    ========================================= */
+    const height =
+        mobile
+            ? MOBILE_BOARD_HEIGHT
+            : DESKTOP_BOARD_HEIGHT;
+
 
     /*
-        This keeps large games compact.
-
-        36 cards → roughly 6 × 6
-        50 cards → roughly 7 × 7
+        The board ALWAYS has the same
+        physical size for the device.
     */
 
-    const targetSize =
-        Math.ceil(
-            Math.sqrt(count)
-        );
+    gameBoard.style.width =
+        "100%";
 
 
-    const maxDimension =
-        Math.max(
-            3,
-            targetSize + 2
-        );
+    gameBoard.style.height =
+        `${height}px`;
 
 
-    /* =========================================
-       START IN THE CENTRE
-    ========================================= */
+    gameBoard.style.position =
+        "relative";
 
-    cells.add("0,0");
 
-    positions.push({
-        x: 0,
-        y: 0
-    });
+    gameBoard.style.margin =
+        "0 auto";
 
 
-    /* =========================================
-       BUILD THE SHAPE
-    ========================================= */
+    gameBoard.style.overflow =
+        "hidden";
 
-    while (
-        positions.length < count
-    ) {
 
-        const possible = [];
-
-
-        /*
-            Look around every existing card
-            and find empty neighbouring spaces.
-        */
-
-        positions.forEach(
-            position => {
-
-                directions.forEach(
-                    direction => {
-
-                        const x =
-                            position.x +
-                            direction.x;
-
-                        const y =
-                            position.y +
-                            direction.y;
-
-
-                        const key =
-                            `${x},${y}`;
-
-
-                        if (
-                            !cells.has(key)
-                        ) {
-
-                            possible.push({
-                                x: x,
-                                y: y
-                            });
-
-                        }
-
-                    }
-                );
-
-            }
-        );
-
-
-        /*
-            Remove duplicates.
-        */
-
-        const unique =
-            [];
-
-
-        const seen =
-            new Set();
-
-
-        possible.forEach(
-            position => {
-
-                const key =
-                    `${position.x},${position.y}`;
-
-
-                if (
-                    !seen.has(key)
-                ) {
-
-                    seen.add(key);
-
-                    unique.push(
-                        position
-                    );
-
-                }
-
-            }
-        );
-
-
-        /*
-            Score each possible position.
-
-            We prefer positions that keep
-            the overall shape compact.
-        */
-
-        const scored =
-            unique.map(
-                position => {
-
-                    const test =
-                        [
-                            ...positions,
-                            position
-                        ];
-
-
-                    const xs =
-                        test.map(
-                            p => p.x
-                        );
-
-
-                    const ys =
-                        test.map(
-                            p => p.y
-                        );
-
-
-                    const minX =
-                        Math.min(...xs);
-
-                    const maxX =
-                        Math.max(...xs);
-
-                    const minY =
-                        Math.min(...ys);
-
-                    const maxY =
-                        Math.max(...ys);
-
-
-                    const width =
-                        maxX - minX + 1;
-
-                    const height =
-                        maxY - minY + 1;
-
-
-                    const area =
-                        width * height;
-
-
-                    /*
-                        Penalise shapes that become
-                        extremely wide or tall.
-                    */
-
-                    let penalty = 0;
-
-
-                    if (
-                        width >
-                        maxDimension
-                    ) {
-
-                        penalty +=
-                            1000 *
-                            (
-                                width -
-                                maxDimension
-                            );
-
-                    }
-
-
-                    if (
-                        height >
-                        maxDimension
-                    ) {
-
-                        penalty +=
-                            1000 *
-                            (
-                                height -
-                                maxDimension
-                            );
-
-                    }
-
-
-                    /*
-                        Prefer compact areas,
-                        but keep some randomness.
-                    */
-
-                    const score =
-                        area +
-                        penalty +
-                        Math.random() * 8;
-
-
-                    return {
-                        position,
-                        score
-                    };
-
-                }
-            );
-
-
-        /*
-            Sort from best to worst.
-        */
-
-        scored.sort(
-            (a, b) =>
-                a.score -
-                b.score
-        );
-
-
-        /*
-            Don't always choose the absolute
-            best position.
-
-            This gives us different shapes
-            every game.
-        */
-
-        const choices =
-            scored.slice(
-                0,
-                Math.min(
-                    5,
-                    scored.length
-                )
-            );
-
-
-        const chosen =
-            choices[
-                randomNumber(
-                    0,
-                    choices.length - 1
-                )
-            ].position;
-
-
-        const key =
-            `${chosen.x},${chosen.y}`;
-
-
-        cells.add(key);
-
-        positions.push(
-            chosen
-        );
-
-    }
-
-
-    return shuffle(
-        positions
-    );
+    gameBoard.style.boxSizing =
+        "border-box";
 
 }
 
 
 /* =========================================================
-   NORMALISE SHAPE
+   GENERATE COMPACT RANDOM PATTERN
 ========================================================= */
 
-function normaliseShape(positions) {
+function generatePattern(count) {
 
-    if (!positions.length) {
-        return positions;
+    /*
+        We use the fixed 12 × 12 board.
+
+        The centre of the board is preferred.
+
+        Cards closer to the centre have a
+        higher chance of being selected.
+
+        Randomness is still added, so every
+        game has a different pattern.
+    */
+
+
+    const candidates = [];
+
+
+    const centre =
+        (BOARD_SIZE - 1) / 2;
+
+
+    for (
+        let y = 0;
+        y < BOARD_SIZE;
+        y++
+    ) {
+
+        for (
+            let x = 0;
+            x < BOARD_SIZE;
+            x++
+        ) {
+
+            const dx =
+                x - centre;
+
+            const dy =
+                y - centre;
+
+
+            const distance =
+                Math.sqrt(
+                    dx * dx +
+                    dy * dy
+                );
+
+
+            /*
+                Lower score = more likely.
+
+                Random component means the
+                shape changes every game.
+            */
+
+            const score =
+                distance +
+                Math.random() * 3.8;
+
+
+            candidates.push({
+
+                x: x,
+
+                y: y,
+
+                score: score
+
+            });
+
+        }
+
     }
 
 
-    const minX =
-        Math.min(
-            ...positions.map(
-                position => position.x
-            )
-        );
+    /*
+        Sort by compactness.
+    */
 
-
-    const minY =
-        Math.min(
-            ...positions.map(
-                position => position.y
-            )
-        );
-
-
-    return positions.map(
-        position => ({
-
-            x:
-                position.x - minX,
-
-            y:
-                position.y - minY
-
-        })
+    candidates.sort(
+        (a, b) =>
+            a.score -
+            b.score
     );
+
+
+    /*
+        Take the required number.
+    */
+
+    let selected =
+        candidates.slice(
+            0,
+            count
+        );
+
+
+    /*
+        Shuffle the selected positions
+        so card/image order doesn't follow
+        the pattern.
+    */
+
+    selected =
+        shuffle(
+            selected
+        );
+
+
+    return selected;
 
 }
 
@@ -649,9 +502,59 @@ function normaliseShape(positions) {
 
 function getCardSize() {
 
-    return window.innerWidth <= 600
-        ? CARD_SIZE_MOBILE
-        : CARD_SIZE_DESKTOP;
+    const boardWidth =
+        gameBoard.clientWidth;
+
+
+    const mobile =
+        window.innerWidth <= 600;
+
+
+    const padding =
+        mobile
+            ? MOBILE_PADDING
+            : DESKTOP_PADDING;
+
+
+    const gap =
+        mobile
+            ? 4
+            : CARD_GAP;
+
+
+    /*
+        12 logical columns.
+
+        This means even a 50-card game
+        has a guaranteed safe position.
+    */
+
+    const available =
+        boardWidth -
+        padding * 2;
+
+
+    const size =
+        (
+            available -
+            (
+                BOARD_SIZE - 1
+            ) * gap
+        ) /
+        BOARD_SIZE;
+
+
+    return {
+
+        size: Math.floor(
+            size
+        ),
+
+        gap: gap,
+
+        padding: padding
+
+    };
 
 }
 
@@ -667,225 +570,101 @@ function createBoard() {
     cards = [];
 
     firstCard = null;
+
     secondCard = null;
 
     lockBoard = false;
 
     moves = 0;
+
     matchedPairs = 0;
 
-    movesDisplay.textContent = "0";
 
-    pairsDisplay.textContent =
-        `0 / ${totalPairs}`;
+    if (movesDisplay) {
+
+        movesDisplay.textContent =
+            "0";
+
+    }
+
+
+    if (pairsDisplay) {
+
+        pairsDisplay.textContent =
+            `0 / ${totalPairs}`;
+
+    }
+
 
     gameBoard.classList.remove(
         "game-complete"
     );
 
 
-    /* =========================================
-       GENERATE RANDOM SHAPE
-    ========================================= */
+    /*
+        Fixed board.
+    */
 
-    let shape =
-        normaliseShape(
-            generateShape(
-                totalPairs * 2
-            )
+    setupBoard();
+
+
+    /*
+        Get card positions.
+    */
+
+    const pattern =
+        generatePattern(
+            totalPairs * 2
         );
 
 
-    /* =========================================
-       FIND SHAPE SIZE
-    ========================================= */
+    /*
+        Get physical card size.
+    */
 
-    const maxX =
-        Math.max(
-            ...shape.map(
-                p => p.x
-            )
-        );
-
-    const maxY =
-        Math.max(
-            ...shape.map(
-                p => p.y
-            )
-        );
+    const dimensions =
+        getCardSize();
 
 
-    const columns =
-        maxX + 1;
-
-    const rows =
-        maxY + 1;
-
-
-    /* =========================================
-       AVAILABLE BOARD SPACE
-    ========================================= */
-
-    const parentWidth =
-        gameBoard.parentElement
-            ? gameBoard.parentElement.clientWidth
-            : 600;
-
-
-    const isMobile =
-        window.innerWidth <= 600;
-
-
-    const horizontalPadding =
-        isMobile
-            ? 12
-            : 20;
-
-
-    const availableWidth =
-        Math.min(
-            parentWidth,
-            650
-        ) - horizontalPadding;
-
-
-    const availableHeight =
-        isMobile
-            ? 500
-            : 600;
-
-
-    /* =========================================
-       CARD SIZE
-    ========================================= */
-
-    let cardSize;
-
-
-    if (isMobile) {
-
-        /*
-            Mobile cards become smaller when
-            the shape gets wider.
-        */
-
-        cardSize =
-            Math.min(
-                52,
-                Math.floor(
-                    (
-                        availableWidth -
-                        (
-                            columns - 1
-                        ) * 6
-                    ) /
-                    columns
-                )
-            );
-
-
-        /*
-            Prevent ridiculously tiny cards.
-        */
-
-        cardSize =
-            Math.max(
-                cardSize,
-                34
-            );
-
-    } else {
-
-        cardSize =
-            Math.min(
-                62,
-                Math.floor(
-                    (
-                        availableWidth -
-                        (
-                            columns - 1
-                        ) * 7
-                    ) /
-                    columns
-                )
-            );
-
-    }
-
-
-    /* =========================================
-       GAP
-    ========================================= */
+    const cardSize =
+        dimensions.size;
 
     const gap =
-        isMobile
-            ? Math.max(
-                4,
-                Math.min(
-                    7,
-                    cardSize * 0.12
-                )
-            )
-            : 7;
+        dimensions.gap;
+
+    const padding =
+        dimensions.padding;
 
 
-    /* =========================================
-       FINAL BOARD SIZE
-    ========================================= */
-
-    const boardWidth =
-        columns * cardSize +
-        (
-            columns - 1
-        ) * gap;
-
-
-    const boardHeight =
-        rows * cardSize +
-        (
-            rows - 1
-        ) * gap;
-
-
-    gameBoard.style.width =
-        `${Math.min(
-            boardWidth,
-            availableWidth
-        )}px`;
-
-
-    gameBoard.style.height =
-        `${Math.min(
-            boardHeight,
-            availableHeight
-        )}px`;
-
-
-    gameBoard.style.margin =
-        "0 auto";
-
-
-    gameBoard.style.position =
-        "relative";
-
-
-    /* =========================================
-       CARD DATA
-    ========================================= */
+    /*
+        Create shuffled card data.
+    */
 
     const shuffledCards =
         createCardData();
 
 
-    /* =========================================
-       CREATE CARDS
-    ========================================= */
+    /*
+        Generate the pattern again if
+        card count was changed by
+        createCardData().
+    */
+
+    const finalPattern =
+        generatePattern(
+            shuffledCards.length
+        );
+
+
+    /*
+        Create cards.
+    */
 
     shuffledCards.forEach(
         (cardData, index) => {
 
             const position =
-                shape[index];
+                finalPattern[index];
 
 
             const card =
@@ -894,7 +673,8 @@ function createBoard() {
                     index,
                     position,
                     cardSize,
-                    gap
+                    gap,
+                    padding
                 );
 
 
@@ -903,21 +683,30 @@ function createBoard() {
             );
 
 
-            cards.push(card);
+            cards.push(
+                card
+            );
 
         }
     );
 
 
-    gameMessage.textContent =
-        `Find ${totalPairs} matching pairs 💕`;
+    /*
+        Message.
+    */
+
+    if (gameMessage) {
+
+        gameMessage.textContent =
+            `Find ${totalPairs} matching pairs 💕`;
+
+    }
 
 }
 
 
-
 /* =========================================================
-   CREATE INDIVIDUAL CARD
+   CREATE CARD
 ========================================================= */
 
 function createCard(
@@ -925,7 +714,8 @@ function createCard(
     index,
     position,
     cardSize,
-    gap
+    gap,
+    padding
 ) {
 
     const card =
@@ -947,25 +737,38 @@ function createCard(
 
 
     /*
-        Position.
+        Physical size.
     */
 
     card.style.width =
         `${cardSize}px`;
 
+
     card.style.height =
         `${cardSize}px`;
 
 
+    /*
+        Position inside fixed board.
+    */
+
     card.style.left =
-        `${position.x *
-            (cardSize + gap)
+        `${padding +
+            position.x *
+            (
+                cardSize +
+                gap
+            )
         }px`;
 
 
     card.style.top =
-        `${position.y *
-            (cardSize + gap)
+        `${padding +
+            position.y *
+            (
+                cardSize +
+                gap
+            )
         }px`;
 
 
@@ -1042,6 +845,7 @@ function createCard(
         back
     );
 
+
     inner.appendChild(
         front
     );
@@ -1053,7 +857,7 @@ function createCard(
 
 
     /*
-        Click event.
+        Click.
     */
 
     card.addEventListener(
@@ -1079,9 +883,7 @@ function createCard(
 
 function handleCardClick(card) {
 
-    if (
-        lockBoard
-    ) {
+    if (lockBoard) {
         return;
     }
 
@@ -1111,18 +913,24 @@ function handleCardClick(card) {
     }
 
 
-    flipCard(card);
+    flipCard(
+        card
+    );
 
 
-    if (
-        !firstCard
-    ) {
+    if (!firstCard) {
 
         firstCard =
             card;
 
-        gameMessage.textContent =
-            "Find its match ✨";
+
+        if (gameMessage) {
+
+            gameMessage.textContent =
+                "Find its match ✨";
+
+        }
+
 
         return;
 
@@ -1135,8 +943,13 @@ function handleCardClick(card) {
 
     moves++;
 
-    movesDisplay.textContent =
-        moves;
+
+    if (movesDisplay) {
+
+        movesDisplay.textContent =
+            moves;
+
+    }
 
 
     checkForMatch();
@@ -1171,14 +984,12 @@ function checkForMatch() {
     }
 
 
-    const isMatch =
+    const match =
         firstCard.dataset.id ===
         secondCard.dataset.id;
 
 
-    if (
-        isMatch
-    ) {
+    if (match) {
 
         handleMatch();
 
@@ -1205,6 +1016,7 @@ function handleMatch() {
         "matched"
     );
 
+
     secondCard.classList.add(
         "matched"
     );
@@ -1213,18 +1025,27 @@ function handleMatch() {
     matchedPairs++;
 
 
-    pairsDisplay.textContent =
-        `${matchedPairs} / ${totalPairs}`;
+    if (pairsDisplay) {
+
+        pairsDisplay.textContent =
+            `${matchedPairs} / ${totalPairs}`;
+
+    }
 
 
-    gameMessage.textContent =
-        "Match found! 💕";
+    if (gameMessage) {
+
+        gameMessage.textContent =
+            "Match found! 💕";
+
+    }
 
 
     setTimeout(
         () => {
 
             resetTurn();
+
 
             if (
                 matchedPairs >=
@@ -1243,7 +1064,7 @@ function handleMatch() {
 
 
 /* =========================================================
-   MISMATCH
+   WRONG MATCH
 ========================================================= */
 
 function handleMismatch() {
@@ -1256,13 +1077,18 @@ function handleMismatch() {
         "wrong"
     );
 
+
     secondCard.classList.add(
         "wrong"
     );
 
 
-    gameMessage.textContent =
-        "Not quite... try again 💫";
+    if (gameMessage) {
+
+        gameMessage.textContent =
+            "Not quite... try again 💫";
+
+    }
 
 
     setTimeout(
@@ -1272,6 +1098,7 @@ function handleMismatch() {
                 "flipped",
                 "wrong"
             );
+
 
             secondCard.classList.remove(
                 "flipped",
@@ -1297,8 +1124,10 @@ function resetTurn() {
     firstCard =
         null;
 
+
     secondCard =
         null;
+
 
     lockBoard =
         false;
@@ -1307,7 +1136,7 @@ function resetTurn() {
 
 
 /* =========================================================
-   WIN GAME
+   WIN
 ========================================================= */
 
 function winGame() {
@@ -1321,15 +1150,10 @@ function winGame() {
     );
 
 
-    gameMessage.textContent =
-        `You found all ${totalPairs} pairs! 🎉`;
-
-
     /*
-        Lower moves = better score.
+        Score based on efficiency.
 
-        Score is calculated from
-        the number of pairs and moves.
+        Fewer moves = higher score.
     */
 
     const score =
@@ -1337,7 +1161,8 @@ function winGame() {
             1,
             Math.round(
                 (
-                    totalPairs * 1000
+                    totalPairs *
+                    1000
                 ) /
                 Math.max(
                     moves,
@@ -1361,12 +1186,29 @@ function winGame() {
         );
 
 
-        bestScoreDisplay.textContent =
-            bestScore;
+        if (bestScoreDisplay) {
+
+            bestScoreDisplay.textContent =
+                bestScore;
+
+        }
 
 
-        gameMessage.textContent =
-            `NEW BEST! ${score} points! 🏆`;
+        if (gameMessage) {
+
+            gameMessage.textContent =
+                `NEW BEST! ${score} points! 🏆`;
+
+        }
+
+    } else {
+
+        if (gameMessage) {
+
+            gameMessage.textContent =
+                `You found all ${totalPairs} pairs! 🎉`;
+
+        }
 
     }
 
@@ -1379,23 +1221,39 @@ function winGame() {
 
 function newGame() {
 
+    /*
+        Choose the number of pairs
+        BEFORE creating the board.
+    */
+
+    totalPairs =
+        Math.min(
+            choosePairCount(),
+            cardImages.length
+        );
+
+
     createBoard();
 
 }
 
 
 /* =========================================================
-   RESTART BUTTON
+   RESTART
 ========================================================= */
 
-restartButton.addEventListener(
-    "click",
-    () => {
+if (restartButton) {
 
-        newGame();
+    restartButton.addEventListener(
+        "click",
+        () => {
 
-    }
-);
+            newGame();
+
+        }
+    );
+
+}
 
 
 /* =========================================================
@@ -1418,23 +1276,7 @@ window.addEventListener(
             setTimeout(
                 () => {
 
-                    /*
-                        Rebuild the current
-                        game layout after resize.
-
-                        We do NOT do this while
-                        the player is halfway
-                        through selecting cards.
-                    */
-
-                    if (
-                        !lockBoard &&
-                        cards.length > 0
-                    ) {
-
-                        rebuildPositions();
-
-                    }
+                    repositionCards();
 
                 },
                 150
@@ -1445,10 +1287,10 @@ window.addEventListener(
 
 
 /* =========================================================
-   REBUILD POSITIONS
+   REPOSITION EXISTING CARDS
 ========================================================= */
 
-function rebuildPositions() {
+function repositionCards() {
 
     if (
         !cards.length
@@ -1457,156 +1299,72 @@ function rebuildPositions() {
     }
 
 
-    const shape =
-        normaliseShape(
-            generateShape(
-                cards.length
-            )
-        );
+    /*
+        IMPORTANT:
+
+        We don't create a new random
+        pattern here.
+
+        We only resize the existing
+        cards so the current game
+        doesn't suddenly change.
+    */
 
 
-    const maxX =
-        Math.max(
-            ...shape.map(
-                p => p.x
-            )
-        );
-
-
-    const maxY =
-        Math.max(
-            ...shape.map(
-                p => p.y
-            )
-        );
-
-
-    const columns =
-        maxX + 1;
-
-    const rows =
-        maxY + 1;
-
-
-    const parentWidth =
-        gameBoard.parentElement
-            ? gameBoard.parentElement.clientWidth
-            : 600;
-
-
-    const isMobile =
+    const mobile =
         window.innerWidth <= 600;
 
 
-    const horizontalPadding =
-        isMobile
-            ? 12
-            : 20;
-
-
-    const availableWidth =
-        Math.min(
-            parentWidth,
-            650
-        ) - horizontalPadding;
-
-
-    const availableHeight =
-        isMobile
-            ? 500
-            : 600;
-
-
-    let cardSize;
-
-
-    if (isMobile) {
-
-        cardSize =
-            Math.min(
-                52,
-                Math.floor(
-                    (
-                        availableWidth -
-                        (
-                            columns - 1
-                        ) * 6
-                    ) /
-                    columns
-                )
-            );
-
-
-        cardSize =
-            Math.max(
-                cardSize,
-                34
-            );
-
-    } else {
-
-        cardSize =
-            Math.min(
-                62,
-                Math.floor(
-                    (
-                        availableWidth -
-                        (
-                            columns - 1
-                        ) * 7
-                    ) /
-                    columns
-                )
-            );
-
-    }
+    const padding =
+        mobile
+            ? MOBILE_PADDING
+            : DESKTOP_PADDING;
 
 
     const gap =
-        isMobile
-            ? Math.max(
-                4,
-                Math.min(
-                    7,
-                    cardSize * 0.12
-                )
-            )
-            : 7;
+        mobile
+            ? 4
+            : CARD_GAP;
 
 
-    const boardWidth =
-        columns * cardSize +
-        (
-            columns - 1
-        ) * gap;
+    const dimensions =
+        getCardSize();
 
 
-    const boardHeight =
-        rows * cardSize +
-        (
-            rows - 1
-        ) * gap;
-
-
-    gameBoard.style.width =
-        `${Math.min(
-            boardWidth,
-            availableWidth
-        )}px`;
-
-
-    gameBoard.style.height =
-        `${Math.min(
-            boardHeight,
-            availableHeight
-        )}px`;
+    const cardSize =
+        dimensions.size;
 
 
     cards.forEach(
-        (card, index) => {
+        card => {
 
-            const position =
-                shape[index];
+            const x =
+                Number(
+                    card.dataset.gridX
+                );
+
+
+            const y =
+                Number(
+                    card.dataset.gridY
+                );
+
+
+            /*
+                Older cards may not have
+                grid coordinates.
+
+                In that case don't move them.
+            */
+
+            if (
+                Number.isNaN(x) ||
+                Number.isNaN(y)
+            ) {
+
+                return;
+
+            }
 
 
             card.style.width =
@@ -1618,7 +1376,8 @@ function rebuildPositions() {
 
 
             card.style.left =
-                `${position.x *
+                `${padding +
+                    x *
                     (
                         cardSize +
                         gap
@@ -1627,7 +1386,8 @@ function rebuildPositions() {
 
 
             card.style.top =
-                `${position.y *
+                `${padding +
+                    y *
                     (
                         cardSize +
                         gap
@@ -1639,16 +1399,10 @@ function rebuildPositions() {
 
 }
 
+
 /* =========================================================
    MUSIC
 ========================================================= */
-
-/*
-    If you already have your music file,
-    put it here:
-
-    music.mp3
-*/
 
 const backgroundMusic =
     new Audio(
@@ -1658,6 +1412,7 @@ const backgroundMusic =
 
 backgroundMusic.loop =
     true;
+
 
 backgroundMusic.volume =
     0.35;
@@ -1677,9 +1432,7 @@ if (musicButton) {
                 !musicEnabled;
 
 
-            if (
-                musicEnabled
-            ) {
+            if (musicEnabled) {
 
                 backgroundMusic
                     .play()
@@ -1707,12 +1460,9 @@ if (musicButton) {
 }
 
 
-/*
-    Browser autoplay protection.
-
-    Start music after the player's
-    first interaction.
-*/
+/* =========================================================
+   START MUSIC AFTER FIRST TOUCH/CLICK
+========================================================= */
 
 document.addEventListener(
     "click",
